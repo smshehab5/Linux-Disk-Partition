@@ -1,0 +1,134 @@
+Secure Shell Protocol (SSH)
+---------------------------
+/etc/ssh
+
+[root@server01 ~]# ls /etc/ssh
+moduli        ssh_host_ecdsa_key        ssh_host_rsa_key
+ssh_config    ssh_host_ecdsa_key.pub    ssh_host_rsa_key.pub
+ssh_config.d  ssh_host_ed25519_key
+sshd_config   ssh_host_ed25519_key.pub
+
+
+Transport leyer to Application Leyer communicated
+
+Port 22
+
+
+======= login style ========
+============================
+ssh user@ipaddress
+ssh -l user ipaddress
+Otherwise login application [putty, MobaXterm, Kitty, OpenSSH etc]
+
+---------------------------------------------------------------
+[root@server01 ~]# systemctl status sshd
+[root@server01 ~]# netstat -tulpn
+
+
+Check firewall Status for sshd
+[root@server01 ~]# firewall-cmd --list-all
+
+[root@server01 ~]# cat /etc/ssh/sshd_config
+[root@server01 ~]# vim /etc/ssh/sshd_config
+
+
+					Port 22
+		
+
+[root@server01 ~]# semanage port -l | grep ssh [For selinux]
+[root@server01 ~]# semanage port -a -t ssh_port_t -p tcp 1922
+[root@server01 ~]# firewall-cmd --list-all
+[root@server01 ~]# firewall-cmd --add-port=1922/tcp --permanent
+[root@server01 ~]# firewall-cmd --reload
+[root@server01 ~]# netstat -tulpn
+
+
+
+Ubntu root & user access
+=======================
+useradd sysadmin
+passwd sysadmin [then type password]
+mkdir /home/sysadmin -p
+sysadmin@ubuntusrv:~$ echo $SHELL [shell check]
+chsh -s shehab [for check shell access or not access]
+visudo [for sudo user]
+ cd /home/sysadmin/
+sysadmin@ubuntusrv:~$ sudo chown sysadmin:sysadmin /home/sysadmin/
+ usermod sysadmin -s /bin/bash [bash access for user]
+ cat /etc/passwd | grep sysadmin
+ 
+ 
+ ==========SSH key========
+ At first ready 3 vm 
+ ---------------
+ 1 vm is controller
+ ------------------
+ create a user
+ -------------
+ [root@controller ~]#useradd sysadmin
+ [root@controller ~]# passwd sysadmin
+ Changing password for user sysadmin.
+ New password:
+ BAD PASSWORD: The password is shorter than 8 characters
+ Retype new password:
+ passwd: all authentication tokens updated successfully.
+ 
+ [Same create are other vm in same user]
+ 
+ SSH Authorization
+=================
+[root@controller ~]# vim /etc/hosts
+
+192.168.7.138 controller.example.com controller
+192.168.7.134 redhat.example.com redhat
+192.168.7.141 almalinux.example.com almalinux
+
+Usign Controller machine copy ssh key anather machien
+[root@controller ~]# scp /etc/hosts root@redhat:/etc/
+[root@controller ~]# scp /etc/hosts root@almalinux:/etc/
+
+
+If not found .ssh directory then 
+[root@controller ~]# su - sysadmin
+[root@controller ~] ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):   [Enter]
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase):   [Enter]
+Enter same passphrase again:   [Enter]
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:F8bJ5ci8LQ/qsucZWcAUUiUQAuDPNmWnPcQgdcwYNc0 root@server01
+The key's randomart image is:
++---[RSA 3072]----+
+|...oo+XBBo. .    |
+|.   .o+*.E =     |
+| .   o +o X .    |
+|  o o =  o +     |
+|   = . oS * .    |
+|  . .   .= +     |
+|        +   .    |
+|      ...o       |
+|      .=+        |
++----[SHA256]-----+
+
+
+
+[sysadmin@controller ~]$ ssh-copy-id sysadmin@almalinux
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/sysadmin/.ssh/id_rsa.pub"
+The authenticity of host 'almalinux (192.168.7.141)' can't be established.
+ECDSA key fingerprint is SHA256:m/rrcaEdM4vd7/rscUggvgtXAsChVLvTQ1r8k0uG408.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+sysadmin@almalinux's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'sysadmin@almalinux'"
+and check to make sure that only the key(s) you wanted were added.
+
+
+Then connect without password location using like:
+[sysadmin@controller ~]$ ssh sysadmin@redhat
