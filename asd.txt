@@ -1,0 +1,123 @@
+* Create user & Group
+------------------------
+User Account Management
+=======================
+	* Superusers - responsible for the administration of the system. The root account is the chief superuser and has UID 0.
+	
+	* System users - user accounts used by the system itself to run processes or daemons. Each of these users has its own files and resources. Ideally, users do not log in as a system user. The range of UIDs is 1-999.
+	
+	* Regular users - accounts that most of us use to accomplish our daily work. They are limited in their access to files and systems and must obtain sudoer permissions to perform administrative tasks. The UIDs start at 1000+.
+
+Introduction to UIDs and GIDs
+==============================
+By default, Linux systems automatically assign UIDs and GIDs to new user accounts in numerical order starting at 1000. In other words, if you create a new user account during installation, it will have UID = 1000 and GID = 1000, as shown below:
+[root@server01 ~]# cat /etc/passwd | grep shehab
+shehab:x:1000:1000:Md. Shehab Uddin:/home/shehab:/bin/bash
+[---] - [---] [---]     [-------]   [--------] [--------]
+|  |      |		|           |	         |     	     |
+|  |      |	    |	        |            |           +----> 	7. Login shell
+|  |      |	    |	        |	         +----------------> 	6. Home directory
+|  |      |	    |	        +-----------------------------> 	5. Comments
+|  |      |	    +-----------------------------------------> 	4. GID
+|  |	  +-----------------------------------------------> 	3. UID
+|  +------------------------------------------------------> 	2. Password
++---------------------------------------------------------> 	1. Username
+
+=================================
+# To create a new user account  #
+=================================
+[root@server01 ~]# useradd sysadmin
+
+To verify the new user is added
+--------------------------------
+[root@server01 ~]# id sysadmin
+uid=1001(sysadmin) gid=1001(sysadmin) groups=1001(sysadmin)
+
+To Set User Password
+--------------------
+[root@server01 ~]# passwd sysadmin
+Changing password for user sysadmin.
+New password:
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password:
+passwd: all authentication tokens updated successfully.
+
+[root@server01 ~]# passwd -S sysadmin
+sysadmin PS 2023-12-20 0 99999 7 -1 (Password set, SHA512 crypt.)
+
+Show the all users info
+-----------------------
+[root@server01 ~]# cat /etc/passwd
+
+	[
+		whoami
+		
+		Type su. When prompted for a password, enter the root password. Type id again. You see that you are currently root. 
+		
+		Type visudo and make sure that the line %wheel ALL=(ALL) ALL is included.
+	]
+
+Showing Password Expiry Information
+-----------------------------------
+[root@server01 ~]# chage -l sysadmin
+
+***************** Create Group *************************
+To create a new Group
+---------------------
+	* Group name
+	* Group password
+	* Group ID
+	* Members
+
+[root@server01 ~]# groupadd systemadmin
+[root@server01 ~]# cat /etc/group | grep systemadmin
+systemadmin:x:1002:
+
+To added user in a Group
+------------------------
+[root@server01 ~]# usermod -a -G systemadmin shehab
+[root@server01 ~]# id shehab
+uid=1000(shehab) gid=1000(shehab) groups=1000(shehab),1002(systemadmin)
+
+4   +   2   +    1
+r       w		 x
+
+dir 
+
+ dr			 	wxr   				 xr   				x
+
+Directory		rwx-7= Owner/User 	rx-5= Group 		Other user
+
+
+
+[root@shehab ~]# usermod -u 5000 shehab
+[root@shehab ~]# id shehab
+uid=5000(shehab) gid=1000(shehab) groups=1000(shehab)
+
+[root@shehab /]# su - sysadmin
+[sysadmin@shehab ~]$ ll
+total 0
+[sysadmin@shehab ~]$ mkdir filepermition
+[sysadmin@shehab ~]$ ll
+total 
+drw-r--rw-. 2 sysadmin sysadmin 6 Jan  3 12:49 filepermition
+[root@shehab sysadmin]# exit
+[root@shehab ~]# chown shehab /home/sysadmin/filepermition/
+[root@shehab ~]# ll /home/sysadmin/
+total 0
+drw-r--rw-. 2 shehab sysadmin 6 Jan  3 12:49 filepermition
+
+To add a new group
+# groupadd options group-name
+
+
+[root@shehab ~]# groups sysadmin
+sysadmin : sysadmin
+
+
+File access
+
+chmod O+r find
+chmod 755  find
+chmod o-w find
+
